@@ -188,7 +188,7 @@ const RECIPES=[
  {c:'bebida',n:'Hibiscus Cold Brew',k:40,p:0,ch:10,f:0,i:'Agua de jamaica, 10 g de azúcar o stevia, hielo y menta opcional.'},
  {c:'bebida',n:'Chocolate Mexicano Fit',k:190,p:20,ch:18,f:4,i:'240 ml de leche, 15 g de proteína, 10 g de cocoa, canela, vainilla, hielo y endulzante.'}
 ];
-const APP_VERSION='2.5.0', ROUTINE_VERSION='V2', ROUTINE_BLOCK='Bloque V2 · 6 semanas';
+const APP_VERSION='2.5.1', ROUTINE_VERSION='V2', ROUTINE_BLOCK='Bloque V2 · 6 semanas';
 const routineConfig={
  'Lower A':{
   intent:'Cuádriceps y glúteos: acumular tensión con técnica estable y recorrido completo.',
@@ -290,7 +290,7 @@ function exerciseKey(r,e){return`${r}::${e.id||e.name}`}
 function legacyExerciseKey(r,e){return`${r}::${e.name}`}
 function storedExerciseUnit(r,e,old){const keys=[exerciseKey(r,e),legacyExerciseKey(r,e),...(e.legacy||[]).map(name=>`${r}::${name}`)],saved=keys.map(key=>db.settings.exerciseUnits[key]).find(Boolean);return saved||old?.unit||old?.sets?.[0]?.unit||db.settings.weightUnit||'kg'}
 function changeExerciseUnit(i,unit){const r=routine.value,e=routineDefs[r][i];db.settings.exerciseUnits[exerciseKey(r,e)]=unit;persist();document.querySelectorAll(`[data-e="${i}"][data-k="weight"]`).forEach(input=>input.placeholder=unit)}
-function renderTrainingWeek(){const jsDay=new Date().getDay(),todayIndex=(jsDay+6)%7;trainingWeek.innerHTML=WEEK_PLAN.map((x,i)=>`<div class="day-plan ${i===todayIndex?'today':''}" ${x.routine?`onclick="routine.value='${x.routine}';renderWorkout()"`:''}><b>${x.day.slice(0,3)}</b><span>${x.plan}</span></div>`).join('');const todayPlan=WEEK_PLAN[todayIndex];todayTraining.textContent=`Hoy: ${todayPlan.plan}`;if(todayPlan.routine)routine.value=todayPlan.routine}
+function renderTrainingWeek(){const jsDay=new Date().getDay(),todayIndex=(jsDay+6)%7;trainingWeek.innerHTML=WEEK_PLAN.map((x,i)=>`<div class="day-plan ${i===todayIndex?'today':''}" ${x.routine?`onclick="routine.value='${x.routine}';renderWorkout()"`:''}><b>${x.day.slice(0,3)}</b><span>${x.plan}</span></div>`).join('');const todayPlan=WEEK_PLAN[todayIndex];todayTraining.textContent=`Hoy: ${todayPlan.plan}`;if(todayPlan.routine&&editingWorkoutIndex===null)routine.value=todayPlan.routine}
 function previousExercise(r,e){for(const w of [...db.workouts].reverse()){if(w.routine!==r)continue;const match=w.exercises?.find(x=>(x.exerciseId&&e.id&&x.exerciseId===e.id)||x.name===e.name||(e.legacy||[]).includes(x.name));if(match)return{exercise:match,workout:w}}return null}
 function repRange(reps){const m=String(reps).match(/(\d+)\s*[–-]\s*(\d+)/);return m?{min:+m[1],max:+m[2]}:null}
 function progressionHint(e,previous){if(!previous)return{text:'Primera referencia: elige una carga que te deje dentro del rango con el RIR indicado.',ready:false};const sets=previous.exercise.sets||[];if(e.progress==='quality')return{text:'Prioridad de esta sesión: repite o mejora la ejecución antes de aumentar carga.',ready:false};const range=repRange(e.reps);if(!range||sets.length<e.sets)return{text:'Próximo objetivo: completa todas las series planeadas con técnica uniforme.',ready:false};const rirFloor=e.progress==='strength'?2:1,ready=sets.every(s=>(+s.reps||0)>=range.max&&(+s.rir||0)>=rirFloor);return ready?{text:'Listo para progresar: sube la carga 2.5–5% y vuelve al inicio del rango.',ready:true}:{text:'Próximo objetivo: mantén la carga y suma al menos 1 repetición total con el mismo RIR.',ready:false}}
