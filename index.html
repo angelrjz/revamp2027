@@ -118,7 +118,7 @@
       <div id="workoutEditBanner" class="notice" style="display:none;margin-bottom:12px">
         <div class="row wrap"><div><b id="workoutEditTitle">Editando entrenamiento</b><div id="workoutEditLabel" class="muted"></div></div><button class="btn alt" onclick="cancelWorkoutEdit()">Cancelar</button></div>
       </div>
-      <div class="row wrap"><div><h2>Entrenamiento</h2><div class="muted">Registra carga y repeticiones por serie.</div></div><select id="routine" class="status" onchange="renderWorkout()"><option>Lower A</option><option>Upper A</option><option>Lower B</option><option>Upper B</option></select></div>
+      <div class="row wrap"><div><h2>Entrenamiento</h2><div class="muted">Registra carga y repeticiones por serie.</div></div><select id="routine" class="status" onchange="renderWorkout()"><option>Leg</option><option>Push</option><option>Pull</option></select></div>
       <label>Fecha de la sesión</label><input id="workoutDate" type="date">
       <div class="muted" style="margin-top:8px">Selecciona kg o lb de forma independiente en cada ejercicio. La unidad queda guardada en su historial.</div>
       <div id="routineMeta" class="routine-kicker"></div>
@@ -170,7 +170,7 @@
         <li><b style="color:var(--ink)">Último café 14:00–14:30.</b> No sumar cafeína después para no afectar el sueño.</li>
         <li><b style="color:var(--ink)">LMNT/electrolitos:</b> solo en días de mucho sudor — squash, quality run, long run y vapor — nunca como hábito diario.</li>
         <li><b style="color:var(--ink)">3 tiempos de comida fijos, sin snack ni prework:</b> desayuno, comida y cena, todos los días, 1,610 kcal exactas.</li>
-        <li><b style="color:var(--ink)">Miércoles es la noche más corta:</b> Seminario hasta las 22:00 empuja todo el RESET después de esa hora, acostándote cerca de las 23:50. Upper A se movió de jueves AM a jueves PM (18:15) justo para que esa noche corta no tenga además un despertar temprano encima. Si el RESET no alcanza el tiempo completo igual, prioriza ducha + higiene dental + cena + dormir.</li>
+        <li><b style="color:var(--ink)">Miércoles es la noche más corta:</b> Seminario hasta las 22:00 empuja todo el RESET después de esa hora, acostándote cerca de las 23:50. Push se movió de jueves AM a jueves PM (18:15) justo para que esa noche corta no tenga además un despertar temprano encima. Si el RESET no alcanza el tiempo completo igual, prioriza ducha + higiene dental + cena + dormir.</li>
       </ul>
     </div>
   </main>
@@ -231,73 +231,58 @@ const RECIPES=[
 ];
 const APP_VERSION='2.6.0', ROUTINE_VERSION='V2', ROUTINE_BLOCK='Bloque V2 · 6 semanas';
 const routineConfig={
- 'Lower A':{
-  intent:'Cuádriceps y glúteos: acumular tensión con técnica estable y recorrido completo.',
-  effort:'Técnica limpia en compuestos · esfuerzo alto solo en aislamientos',
+ 'Leg':{
+  intent:'Tren inferior completo — Semana 1: cuádriceps, glúteo e isquiotibiales con técnica estable.',
+  effort:'Técnica limpia en compuestos · esfuerzo alto en aislamientos',
   rest:'2–3 min compuestos · 60–90 s aislamientos'
  },
- 'Upper A':{
-  intent:'Empuje dominante con jalón horizontal: desarrollar pecho y hombro sin descuidar la espalda.',
-  effort:'Técnica limpia en compuestos · esfuerzo controlado en aislamientos',
-  rest:'2–3 min presses y remo · 60–90 s aislamientos'
+ 'Push':{
+  intent:'Empuje completo — Semana 1: pecho, hombro y tríceps, cerrando con core.',
+  effort:'Técnica limpia en compuestos · dropsets al fallo técnico en aislamientos',
+  rest:'2–3 min compuestos · 45–60 s dropsets'
  },
- 'Lower B':{
-  intent:'Fuerza, potencia y cadena posterior con fatiga controlada antes del 10K del domingo.',
-  effort:'Smith con margen técnico · resto con esfuerzo controlado',
-  rest:'3 min Smith · 2 min hip thrust · 60–90 s resto'
- },
- 'Upper B':{
-  intent:'Jalón dominante: construir espalda, bíceps y deltoide posterior, con pecho secundario.',
-  effort:'Jalones y remos con técnica limpia · esfuerzo controlado en aislamientos',
-  rest:'2–3 min jalones, remos y press · 60–90 s aislamientos'
+ 'Pull':{
+  intent:'Jalón completo — Semana 1: espalda, bíceps y deltoide posterior, cerrando con core.',
+  effort:'Técnica limpia en jalones y remo · dropsets al fallo técnico en aislamientos',
+  rest:'2–3 min jalones y remo · 45–60 s dropsets'
  }
 };
 const routineDefs={
- 'Lower A':[
-  {id:'lower-a-smith-squat',name:'Sentadilla Smith con talones sobre disco',sets:3,reps:'8–10',purpose:'Cuádriceps · patrón principal',cue:'Rodillas siguen la punta del pie; baja controlado y mantén el torso estable.',legacy:['Sentadilla Smith']},
-  {id:'lower-a-hip-thrust',name:'Hip thrust',sets:4,reps:'8–10',purpose:'Glúteo · máxima tensión',cue:'Pausa un segundo arriba sin hiperextender la espalda.'},
-  {id:'lower-a-seated-curl',name:'Femoral sentado',sets:4,reps:'8–10',purpose:'Femoral · longitud muscular',cue:'Controla el regreso 2–3 segundos y no levantes la cadera.'},
-  {id:'lower-a-knee-extension',name:'Extensión de rodilla (dropset)',sets:3,reps:'8 + fallo',purpose:'Cuádriceps · aislamiento',cue:'Extiende completo, baja controlado y reduce peso solo al terminar las ocho.',progress:'quality',legacy:['Extensión de rodilla']},
-  {id:'lower-a-lying-curl',name:'Femoral acostado (dropset)',sets:3,reps:'8 + fallo',purpose:'Femoral · aislamiento',cue:'Mantén la pelvis pegada y evita acelerar la fase negativa.',progress:'quality'},
-  {id:'lower-a-abductors',name:'Abductores (dropset)',sets:3,reps:'8 + fallo',purpose:'Glúteo medio · estabilidad',cue:'Abre desde la cadera y conserva tensión al volver.',progress:'quality',legacy:['Abductores']}
+ 'Leg':[
+  {id:'leg-smith-squat',name:'Sentadilla Smith',sets:3,reps:'5–9',purpose:'Cuádriceps y glúteo · patrón principal',cue:'Rodillas siguen la punta del pie; baja controlado y mantén el torso estable.',legacy:['Sentadilla Smith con talones sobre disco']},
+  {id:'leg-hip-thrust',name:'Hip thrust',sets:3,reps:'5–9',purpose:'Glúteo · máxima tensión',cue:'Pausa un segundo arriba sin hiperextender la espalda.'},
+  {id:'leg-press',name:'Press de pierna',sets:3,reps:'8–10',purpose:'Cuádriceps · volumen',cue:'Pies a la altura de la cadera; no bloquees las rodillas arriba.'},
+  {id:'leg-seated-curl',name:'Femoral sentado',sets:3,reps:'8–10',purpose:'Femoral · longitud muscular',cue:'Controla el regreso 2–3 segundos y no levantes la cadera.'},
+  {id:'leg-knee-extension',name:'Extensión de rodilla',sets:3,reps:'8–10',purpose:'Cuádriceps · aislamiento',cue:'Extiende completo y baja controlado.',legacy:['Extensión de rodilla (dropset)']},
+  {id:'leg-calf-extension',name:'Extensión de pantorrilla',sets:3,reps:'10–15',purpose:'Pantorrilla · recorrido completo',cue:'Pausa abajo y arriba; evita rebotes.',legacy:['Extensión de pantorrilla sentado en máquina']}
  ],
- 'Upper A':[
-  {id:'upper-a-bench-press',name:'Press pecho horizontal con barra',sets:3,reps:'6–8',purpose:'Pecho · fuerza e hipertrofia',cue:'Escápulas estables; toca el mismo punto y empuja sin perder posición.',legacy:['Press de pecho']},
-  {id:'upper-a-seated-row',name:'Remo sentado en polea con agarre neutro',sets:3,reps:'8–10',purpose:'Espalda · jalón horizontal',cue:'Lleva los codos hacia atrás sin encoger hombros ni balancear el torso.'},
-  {id:'upper-a-machine-press',name:'Press militar con máquina',sets:3,reps:'6–8',purpose:'Hombro · empuje vertical',cue:'Costillas controladas; empuja arriba sin elevar los hombros.',legacy:['Press militar']},
-  {id:'upper-a-cable-fly',name:'Cruce de poleas / Cristos',sets:3,reps:'10–12',purpose:'Pecho · acortamiento',cue:'Abraza al frente y mantén un segundo de contracción.'},
-  {id:'upper-a-triceps-extension',name:'Extensión de tríceps con barra corta',sets:3,reps:'8–10',purpose:'Tríceps · extensión de codo',cue:'Codos quietos y extensión completa sin usar el torso.',legacy:['Tríceps']},
-  {id:'upper-a-lateral-raise',name:'Laterales con mancuerna',sets:2,reps:'12–14',purpose:'Deltoide lateral · amplitud',cue:'Sube con el codo y evita impulsar el peso.',legacy:['Elevaciones laterales']},
-  {id:'upper-a-crunch',name:'Crunch abdominal en banco',sets:3,reps:'10–12',purpose:'Core · flexión controlada',cue:'Acerca costillas a pelvis sin jalar el cuello.'}
+ 'Push':[
+  {id:'push-bench-press',name:'Press pecho horizontal con barra',sets:3,reps:'6–9',purpose:'Pecho · fuerza principal',cue:'Escápulas estables; toca el mismo punto y empuja sin perder posición.',legacy:['Press pecho horizontal con barra']},
+  {id:'push-triceps-extension',name:'Extensión de tríceps con barra corta',sets:3,reps:'6–9',purpose:'Tríceps · extensión de codo',cue:'Codos quietos y extensión completa sin usar el torso.',legacy:['Tríceps']},
+  {id:'push-machine-press',name:'Press militar con máquina',sets:3,reps:'6–9',purpose:'Hombro · empuje vertical',cue:'Costillas controladas; empuja arriba sin elevar los hombros.',legacy:['Press militar']},
+  {id:'push-cable-fly',name:'Cruce de poleas / Cristos (dropset)',sets:2,reps:'8 + 8',purpose:'Pecho · acortamiento',cue:'Abraza al frente, un segundo de contracción, reduce peso solo al terminar las ocho.',progress:'quality',legacy:['Cruce de poleas / Cristos']},
+  {id:'push-french-press',name:'Press francés con barra Z (dropset)',sets:2,reps:'8 + 8',purpose:'Tríceps · aislamiento',cue:'Codos fijos y controla la fase negativa antes de reducir la carga.',progress:'quality'},
+  {id:'push-lateral-raise',name:'Laterales con mancuerna (dropset)',sets:2,reps:'8 + 8',purpose:'Deltoide lateral · amplitud',cue:'Sube con el codo y evita impulsar el peso.',progress:'quality',legacy:['Laterales con mancuerna']},
+  {id:'push-crunch',name:'Crunch abdominal en banco',sets:3,reps:'10–12',purpose:'Core · flexión controlada',cue:'Acerca costillas a pelvis sin jalar el cuello.'},
+  {id:'push-reverse-crunch',name:'Crunch inverso en banco (sujeto de cabeza)',sets:3,reps:'10–12',purpose:'Core · control pélvico',cue:'Eleva la pelvis sin usar impulso de las piernas.',legacy:['Crunch inverso en banco (sujeto de cabeza)']}
  ],
- 'Lower B':[
-  {id:'lower-b-smith-strength',name:'Sentadilla Smith fuerza',sets:2,reps:'3–4',purpose:'Fuerza · exposición pesada',cue:'Repeticiones limpias y rápidas; detén la serie con dos repeticiones en reserva.',note:'Antes: aproximar al peso máximo de Smith con 3 series.',progress:'strength'},
-  {id:'lower-b-goblet-squat',name:'Sentadilla goblet al pecho con talones sobre disco',sets:3,reps:'10–12',purpose:'Cuádriceps · volumen',cue:'Mantén la mancuerna pegada y el recorrido uniforme.',legacy:['Prensa']},
-  {id:'lower-b-jump',name:'Salto explosivo',sets:3,reps:'Calidad técnica',purpose:'Potencia · velocidad',cue:'Detén la serie cuando pierdas altura o velocidad; no persigas el fallo.',progress:'quality',legacy:['Salto explosivo']},
-  {id:'lower-b-hip-thrust',name:'Hip thrust',sets:4,reps:'8–10',purpose:'Glúteo · tensión principal',cue:'Pausa arriba y conserva la pelvis neutra.'},
-  {id:'lower-b-knee-extension',name:'Extensión de rodilla (dropset)',sets:2,reps:'8 + 8',purpose:'Cuádriceps · aislamiento',cue:'Completa ocho limpias antes de reducir la carga.',progress:'quality',legacy:['Extensión de rodilla']},
-  {id:'lower-b-lying-curl',name:'Femoral acostado (dropset)',sets:2,reps:'8 + 8',purpose:'Femoral · aislamiento',cue:'Cadera pegada al banco durante ambas partes.',progress:'quality',legacy:['Curl femoral']},
-  {id:'lower-b-calf',name:'Extensión de pantorrilla sentado en máquina',sets:3,reps:'10 + 10',purpose:'Pantorrilla · recorrido completo',cue:'Pausa abajo y arriba; evita rebotes.',note:'Usar la máquina sentada; no la costurera.',progress:'quality',legacy:['Pantorrilla']}
- ],
- 'Upper B':[
-  {id:'upper-b-lat-pulldown',name:'Jalón al pecho con agarre neutro',sets:3,reps:'6–8',purpose:'Dorsal · jalón vertical',cue:'Baja los codos hacia las costillas sin inclinarte hacia atrás.'},
-  {id:'upper-b-chest-supported-row',name:'Remo con pecho apoyado',sets:3,reps:'8–10',purpose:'Espalda media · densidad',cue:'Pecho pegado al soporte; pausa al juntar escápulas.'},
-  {id:'upper-b-incline-press',name:'Press inclinado en máquina',sets:3,reps:'8–10',purpose:'Pecho superior · estímulo secundario',cue:'Escápulas estables y recorrido sin despegar los hombros.',legacy:['Press inclinado']},
-  {id:'upper-b-reverse-fly',name:'Reverse fly en máquina o polea',sets:3,reps:'12–15',purpose:'Deltoide posterior · postura',cue:'Abre con los codos y evita retraer de más la espalda.'},
-  {id:'upper-b-ez-curl',name:'Curl de bíceps con barra Z',sets:3,reps:'8–10',purpose:'Bíceps · tensión principal',cue:'Codos quietos y fase negativa de 2–3 segundos.'},
-  {id:'upper-b-hammer-curl',name:'Curl martillo con mancuernas',sets:2,reps:'10–12',purpose:'Braquial y antebrazo',cue:'Muñeca neutra y sin balancear el torso.'},
-  {id:'upper-b-lateral-raise',name:'Laterales con mancuerna',sets:2,reps:'12–14',purpose:'Deltoide lateral · amplitud',cue:'Sube con el codo y controla el descenso.'},
-  {id:'upper-b-reverse-crunch',name:'Crunch inverso en banco (sujeto de cabeza)',sets:3,reps:'10–12',purpose:'Core · control pélvico',cue:'Eleva la pelvis sin usar impulso de las piernas.'}
+ 'Pull':[
+  {id:'pull-lat-pulldown',name:'Jalón al pecho agarre medio',sets:3,reps:'6–9',purpose:'Dorsal · jalón vertical',cue:'Baja los codos hacia las costillas sin inclinarte hacia atrás.',legacy:['Jalón al pecho con agarre neutro']},
+  {id:'pull-machine-row',name:'Remo con máquina (dropset)',sets:3,reps:'8 + 8',purpose:'Espalda media · densidad',cue:'Pecho firme, pausa al juntar escápulas, reduce peso solo al terminar las ocho.',progress:'quality'},
+  {id:'pull-supinated-curl',name:'Curl de bíceps supino con mancuerna',sets:3,reps:'6–9',purpose:'Bíceps · tensión principal',cue:'Codos quietos y fase negativa de 2–3 segundos.'},
+  {id:'pull-preacher-curl',name:'Curl bíceps bayesian o predicador (dropset)',sets:3,reps:'8 + 8',purpose:'Bíceps · aislamiento',cue:'Rango completo y controla el regreso antes de reducir la carga.',progress:'quality',legacy:['Curl de bíceps con barra Z']},
+  {id:'pull-reverse-fly',name:'Posterior con pec fly reverse',sets:3,reps:'12–14',purpose:'Deltoide posterior · postura',cue:'Abre con los codos y evita retraer de más la espalda.',legacy:['Reverse fly en máquina o polea']},
+  {id:'pull-machine-crunch',name:'Crunch abdominal en máquina (dropset triple)',sets:3,reps:'8 + 8 + 8',purpose:'Core · resistencia',cue:'Exhala en la contracción y reduce peso en cada drop.',progress:'quality'}
  ]
 };
 const WEEK_PLAN=[
- {day:'Lunes',plan:'Squash'},
- {day:'Martes',plan:'Lower A',routine:'Lower A'},
- {day:'Miércoles',plan:'Descanso + movilidad'},
- {day:'Jueves',plan:'Upper A',routine:'Upper A'},
- {day:'Viernes',plan:'Lower B',routine:'Lower B'},
- {day:'Sábado',plan:'Upper B',routine:'Upper B'},
- {day:'Domingo',plan:'Carrera 10 km'}
+ {day:'Lunes',plan:'Squash 19:00'},
+ {day:'Martes',plan:'Leg AM',routine:'Leg'},
+ {day:'Miércoles',plan:'5K easy + RESET'},
+ {day:'Jueves',plan:'Push PM',routine:'Push'},
+ {day:'Viernes',plan:'Sin entrenamiento'},
+ {day:'Sábado',plan:'Quality run + Pull PM',routine:'Pull'},
+ {day:'Domingo',plan:'Long run familiar'}
 ];
 let db=load(), selectedScores={energy:0,hunger:0,stress:0,recovery:0}, selectedWeekOffset=0, activeDayDate=null, autosaveTimer=null, editingWorkoutIndex=null;
 function defaultWeeklyMenu(){return{week:{
@@ -414,20 +399,20 @@ function chooseFromMenu(name,btn){const r=RECIPES.find(x=>x.n===name);if(!r)retu
 function renderDishTable(){const list=RECIPES.filter(r=>r.c===dishTableCategory.value);dishTable.innerHTML=`<table class="dish-table"><thead><tr><th>Platillo</th><th>Personalidad del platillo</th><th>¿Cuándo elegirlo?</th></tr></thead><tbody>${list.map(r=>`<tr><td><b>${esc(r.n)}</b><br><span class="muted">${r.k} kcal · ${r.p} g proteína</span></td><td>${esc(r.x)}</td><td>${esc(r.w)}</td></tr>`).join('')}</tbody></table>`}
 const SCHED_META={
   1:{name:'Lunes',chips:['Sin gym AM','Squash 19:00']},
-  2:{name:'Martes',chips:['Lower AM','Entorno 19–22']},
+  2:{name:'Martes',chips:['Leg AM','Entorno 19–22']},
   3:{name:'Miércoles',chips:['5K easy','Seminario 19–22','RESET obligatorio']},
-  4:{name:'Jueves',chips:['Sin gym AM','Upper A PM']},
+  4:{name:'Jueves',chips:['Sin gym AM','Push PM']},
   5:{name:'Viernes',chips:['Sin entrenamiento','Métodos 19–22']},
-  6:{name:'Sábado',chips:['Quality run AM','Upper B PM']},
+  6:{name:'Sábado',chips:['Quality run AM','Pull PM']},
   0:{name:'Domingo',chips:['Long run 10–12','Meal prep extendido']}
 };
 const SCHEDULE={
   1:[{t:'6:30',a:'Despertar. Levotiroxina + 400 ml agua.'},{t:'7:30',a:'Café de olla #1 sin azúcar + creatina + colágeno (60 min después de la levotiroxina).'},{t:'7:45',a:'Desayuno · {desayuno} + omega-3. Agua 250–300 ml.',meal:'desayuno'},{t:'9:00',a:'Oficina.'},{t:'10:30',a:'Café #2 + 350 ml agua.'},{t:'13:30',a:'Comida · {comida}. Agua 350 ml.',meal:'comida'},{t:'14:00',a:'Café #3 — último del día.'},{t:'18:30',a:'Hidratación previa: 300–400 ml antes del squash.'},{t:'19:00',a:'Squash. Agua extra según sudor y calor.'},{t:'20:15',a:'Cena · {cena} + ~300 ml agua.',meal:'cena'},{t:'21:15',a:'Closing Ritual (15 min): higiene dental, skincare, ropa/mochila/botella de mañana, reflexión del día, luces bajas.'},{t:'21:45',a:'Cierre temprano — a dormir.'}],
-  2:[{t:'5:45',a:'Despertar. Levotiroxina + 400 ml agua.'},{t:'6:45',a:'Café #1 + creatina + colágeno.'},{t:'7:00',a:'Gym · Lower completo. Agua 500–750 ml durante la sesión.'},{t:'8:15',a:'Desayuno · {desayuno} + omega-3. Agua 250–300 ml.',meal:'desayuno'},{t:'9:00',a:'Oficina.'},{t:'10:30',a:'Café #2 + 350 ml agua.'},{t:'13:30',a:'Comida · {comida}. Agua 350 ml.',meal:'comida'},{t:'14:00',a:'Café #3 — último del día.'},{t:'16:45',a:'Agua 300 ml.'},{t:'19:00',a:'Entorno hasta las 22:00.'},{t:'22:15',a:'Cena · {cena} + ~300 ml agua.',meal:'cena'},{t:'22:45',a:'Closing Ritual — versión rápida (5 min). Día largo: prioriza dormir.'}],
+  2:[{t:'5:45',a:'Despertar. Levotiroxina + 400 ml agua.'},{t:'6:45',a:'Café #1 + creatina + colágeno.'},{t:'7:00',a:'Gym · Leg. Agua 500–750 ml durante la sesión.'},{t:'8:15',a:'Desayuno · {desayuno} + omega-3. Agua 250–300 ml.',meal:'desayuno'},{t:'9:00',a:'Oficina.'},{t:'10:30',a:'Café #2 + 350 ml agua.'},{t:'13:30',a:'Comida · {comida}. Agua 350 ml.',meal:'comida'},{t:'14:00',a:'Café #3 — último del día.'},{t:'16:45',a:'Agua 300 ml.'},{t:'19:00',a:'Entorno hasta las 22:00.'},{t:'22:15',a:'Cena · {cena} + ~300 ml agua.',meal:'cena'},{t:'22:45',a:'Closing Ritual — versión rápida (5 min). Día largo: prioriza dormir.'}],
   3:[{t:'6:00',a:'Despertar. Levotiroxina + 400 ml agua.'},{t:'6:10',a:'5K easy — aeróbico, conversacional, recuperación activa.'},{t:'6:45',a:'Ducha rápida.'},{t:'7:00',a:'Café #1 + creatina + colágeno.'},{t:'7:15',a:'Desayuno · {desayuno} + omega-3.',meal:'desayuno'},{t:'9:00',a:'Oficina.'},{t:'10:30',a:'Café #2 + 350 ml agua.'},{t:'13:30',a:'Comida · {comida}. Agua 350 ml.',meal:'comida'},{t:'14:00',a:'Café #3 — último del día.'},{t:'19:00',a:'Seminario hasta las 22:00.'},{t:'22:00',a:'Fin de Seminario → arranca el RESET.'},{t:'22:10',a:'Hidratación previa: 400–500 ml.'},{t:'22:20',a:'Vapor 10–15 min.'},{t:'22:35',a:'Ducha completa.'},{t:'22:50',a:'Higiene dental extendida: hilo/interdental, cepillado, lengua.'},{t:'23:00',a:'Skincare e hidratación corporal.'},{t:'23:10',a:'Grooming + antitranspirante (rotación semanal).'},{t:'23:20',a:'Toalla limpia + funda de almohada limpia.'},{t:'23:30',a:'Cena · {cena} + ~300 ml agua, con la hidratación gradual de después del vapor.',meal:'cena'},{t:'23:50',a:'Desconexión y cama — la noche más tardía de la semana.'}],
-  4:[{t:'6:30',a:'Despertar. Levotiroxina + 400 ml agua.'},{t:'7:30',a:'Café #1 + creatina + colágeno.'},{t:'7:45',a:'Desayuno · {desayuno} + omega-3.',meal:'desayuno'},{t:'9:00',a:'Oficina.'},{t:'10:30',a:'Café #2 + 350 ml agua.'},{t:'13:30',a:'Comida · {comida}. Agua 350 ml.',meal:'comida'},{t:'14:00',a:'Café #3 — último del día.'},{t:'18:00',a:'Sale de oficina.'},{t:'18:15',a:'Gym · Upper A. Agua 500–750 ml durante la sesión — se mueve de la mañana a la tarde para no encimar con la noche corta del miércoles.'},{t:'19:30',a:'Ducha rápida.'},{t:'20:00',a:'Cena · {cena} + ~300 ml agua.',meal:'cena'},{t:'21:15',a:'Closing Ritual (15 min).'},{t:'21:30',a:'A dormir — mañana sábado es doble sesión.'}],
+  4:[{t:'6:30',a:'Despertar. Levotiroxina + 400 ml agua.'},{t:'7:30',a:'Café #1 + creatina + colágeno.'},{t:'7:45',a:'Desayuno · {desayuno} + omega-3.',meal:'desayuno'},{t:'9:00',a:'Oficina.'},{t:'10:30',a:'Café #2 + 350 ml agua.'},{t:'13:30',a:'Comida · {comida}. Agua 350 ml.',meal:'comida'},{t:'14:00',a:'Café #3 — último del día.'},{t:'18:00',a:'Sale de oficina.'},{t:'18:15',a:'Gym · Push. Agua 500–750 ml durante la sesión — se mueve de la mañana a la tarde para no encimar con la noche corta del miércoles.'},{t:'19:30',a:'Ducha rápida.'},{t:'20:00',a:'Cena · {cena} + ~300 ml agua.',meal:'cena'},{t:'21:15',a:'Closing Ritual (15 min).'},{t:'21:30',a:'A dormir — mañana sábado es doble sesión.'}],
   5:[{t:'6:30',a:'Despertar. Levotiroxina + 400 ml agua.'},{t:'7:30',a:'Café #1 + creatina + colágeno.'},{t:'7:45',a:'Desayuno · {desayuno} + omega-3.',meal:'desayuno'},{t:'9:00',a:'Oficina.'},{t:'10:30',a:'Café #2 + 350 ml agua.'},{t:'13:30',a:'Comida · {comida}. Agua 350 ml.',meal:'comida'},{t:'14:00',a:'Café #3 — último del día.'},{t:'19:00',a:'Métodos hasta las 22:00.'},{t:'22:15',a:'Cena · {cena} + ~300 ml agua.',meal:'cena'},{t:'22:45',a:'Closing Ritual.'}],
-  6:[{t:'6:30',a:'Despertar. Levotiroxina + 400 ml agua.'},{t:'7:00',a:'Quality run — velocidad / economía de carrera.'},{t:'7:50',a:'Café #1 + creatina + colágeno.'},{t:'8:10',a:'Desayuno · {desayuno} + omega-3.',meal:'desayuno'},{t:'9:00–13:00',a:'Libre — separa varias horas antes de Upper B para llegar sin fatiga.'},{t:'13:30',a:'Comida · {comida}. Agua 350 ml.',meal:'comida'},{t:'16:00',a:'Gym · Upper B. Si hay fatiga importante, prioriza la calidad de la sesión de running de la mañana.'},{t:'17:15',a:'Agua 300 ml — recuperación de la doble sesión.'},{t:'20:00',a:'Cena · {cena} + ~300 ml agua.',meal:'cena'},{t:'21:15',a:'Closing Ritual.'}],
+  6:[{t:'6:30',a:'Despertar. Levotiroxina + 400 ml agua.'},{t:'7:00',a:'Quality run — velocidad / economía de carrera.'},{t:'7:50',a:'Café #1 + creatina + colágeno.'},{t:'8:10',a:'Desayuno · {desayuno} + omega-3.',meal:'desayuno'},{t:'9:00–13:00',a:'Libre — separa varias horas antes de Pull para llegar sin fatiga.'},{t:'13:30',a:'Comida · {comida}. Agua 350 ml.',meal:'comida'},{t:'16:00',a:'Gym · Pull. Si hay fatiga importante, prioriza la calidad de la sesión de running de la mañana.'},{t:'17:15',a:'Agua 300 ml — recuperación de la doble sesión.'},{t:'20:00',a:'Cena · {cena} + ~300 ml agua.',meal:'cena'},{t:'21:15',a:'Closing Ritual.'}],
   0:[{t:'8:00',a:'Despertar. Levotiroxina + 400 ml agua.'},{t:'9:00',a:'Café #1 + creatina + colágeno.'},{t:'9:45',a:'Sale a encontrarse con tus papás para correr.'},{t:'10:00',a:'Long run familiar con tus papás, de 10 a 12 aprox. — según la progresión de la semana. Agua extra por sed/calor.'},{t:'12:00',a:'Ducha rápida al terminar.'},{t:'12:30',a:'Desayuno · {desayuno} + omega-3, con la familia — la sobremesa se extiende hasta las 14:00.',meal:'desayuno'},{t:'14:30',a:'Meal prep: cocinar y porcionar proteína y carbohidrato de toda la semana — sigues con tu mamá, pero cada domingo toma más tú solo.'},{t:'16:45',a:'Comida familiar · {comida}. Agua 350 ml.',meal:'comida'},{t:'19:30',a:'Cena · {cena} + ~300 ml agua.',meal:'cena'},{t:'21:00',a:'Closing Ritual + preparar ropa/mochila/botella del lunes.'}]
 };
 let schedSelectedDow=null;
