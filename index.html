@@ -152,6 +152,28 @@
     <div id="menuLibrary" class="routine-library-grid"></div>
     <div class="card"><h2>Conoce tus platillos</h2><div class="filters"><select id="dishTableCategory" onchange="renderDishTable()"><option value="desayuno">Desayunos</option><option value="comida">Comidas</option><option value="cena">Cenas</option></select></div><div id="dishTable" class="table-wrap"></div></div>
   </main>
+
+  <main id="schedulePage" class="page">
+    <div class="card">
+      <h2>Horario maestro</h2>
+      <div class="muted">Hora por hora: medicación, cafeína, hidratación, entrenamiento, oficina y las 3 comidas fijas de cada día.</div>
+      <div class="weekly-routine" id="schedDayPicker" style="margin-top:12px;"></div>
+    </div>
+    <div class="card">
+      <div class="row wrap"><h2 id="schedDayTitle">Hoy</h2><div class="day-chips" id="schedChips" style="display:flex;gap:6px;flex-wrap:wrap;"></div></div>
+      <div id="schedRows"></div>
+    </div>
+    <div class="card">
+      <h2>Reglas que cruzan la semana</h2>
+      <ul style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:8px;font-size:12.5px;color:var(--muted);line-height:1.5;">
+        <li><b style="color:var(--ink)">Secuencia de la mañana:</b> levotiroxina + agua al despertar, esperar 60 min, luego café/creatina/colágeno — nunca antes.</li>
+        <li><b style="color:var(--ink)">Último café 14:00–14:30.</b> No sumar cafeína después para no afectar el sueño.</li>
+        <li><b style="color:var(--ink)">LMNT/electrolitos:</b> solo en días de mucho sudor — squash, quality run, long run y vapor — nunca como hábito diario.</li>
+        <li><b style="color:var(--ink)">3 tiempos de comida fijos, sin snack ni prework:</b> desayuno, comida y cena, todos los días, 1,610 kcal exactas.</li>
+        <li><b style="color:var(--ink)">Miércoles es la noche más corta:</b> Seminario hasta las 22:00 empuja todo el RESET después de esa hora. Si no alcanza el tiempo, prioriza ducha + higiene dental + cena + dormir.</li>
+      </ul>
+    </div>
+  </main>
 </div>
 
 <nav class="tabs">
@@ -160,6 +182,7 @@
   <button class="tab" data-page="trainingPage">ENTRENO</button>
   <button class="tab" data-page="routinesPage">RUTINAS</button>
   <button class="tab" data-page="recipesPage">RECETAS</button>
+  <button class="tab" data-page="schedulePage">HORARIO</button>
 </nav>
 
 <div id="reportPrint"></div>
@@ -389,7 +412,31 @@ function downloadReport(){document.getElementById('reportPrint').innerHTML=build
 function renderRecipes(){const order=['desayuno','comida','cena','snack','bebida'];menuLibrary.innerHTML=order.filter(cat=>RECIPES.some(r=>r.c===cat)).map(cat=>{const list=RECIPES.filter(r=>r.c===cat);return`<section class="routine-library-card"><h2>${esc(CATS[cat])}</h2><div class="routine-library-meta">Menú · ${list.length} recetas</div><div class="routine-library-list">${list.map(r=>`<div class="routine-library-row"><div class="routine-library-name">${esc(r.n)}<span class="routine-library-note">${r.k} kcal · ${r.p} g proteína — ${esc(r.i)}</span>${r.x?`<span class="routine-library-note" style="color:#dfe6e2">${esc(r.x)}</span>`:''}</div><button class="menu-pick" onclick="chooseFromMenu('${esc(r.n).replace(/'/g,"\\'")}',this)">Elegir</button></div>`).join('')}</div></section>`}).join('')}
 function chooseFromMenu(name,btn){const r=RECIPES.find(x=>x.n===name);if(!r)return;day().meals.push({name:r.n,ingredients:r.i,kcal:r.k,protein:r.p,status:'eaten',recipe:true});persist();renderMeals();const original=btn.textContent;btn.textContent='✓ Agregada';btn.disabled=true;setTimeout(()=>{btn.textContent=original;btn.disabled=false},1400)}
 function renderDishTable(){const list=RECIPES.filter(r=>r.c===dishTableCategory.value);dishTable.innerHTML=`<table class="dish-table"><thead><tr><th>Platillo</th><th>Personalidad del platillo</th><th>¿Cuándo elegirlo?</th></tr></thead><tbody>${list.map(r=>`<tr><td><b>${esc(r.n)}</b><br><span class="muted">${r.k} kcal · ${r.p} g proteína</span></td><td>${esc(r.x)}</td><td>${esc(r.w)}</td></tr>`).join('')}</tbody></table>`}
-document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{if(activeDayDate&&b.dataset.page!=='today'){clearTimeout(autosaveTimer);saveToday(false);activeDayDate=null}document.querySelectorAll('.tab,.page').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById(b.dataset.page).classList.add('active');if(b.dataset.page==='progressPage')renderProgress();if(b.dataset.page==='trainingPage'){renderTrainingWeek();renderWorkout();renderWorkoutHistory()}if(b.dataset.page==='routinesPage')renderRoutineLibrary();if(b.dataset.page==='today')renderWeek();if(b.dataset.page==='recipesPage'){renderRecipes();renderDishTable();fillWeeklyMenuSelects()}});
+const SCHED_META={
+  1:{name:'Lunes',chips:['Sin gym AM','Squash 19:00']},
+  2:{name:'Martes',chips:['Lower AM','Entorno 19–22']},
+  3:{name:'Miércoles',chips:['5K easy','Seminario 19–22','RESET obligatorio']},
+  4:{name:'Jueves',chips:['Upper A AM','Noche libre']},
+  5:{name:'Viernes',chips:['Sin entrenamiento','Métodos 19–22']},
+  6:{name:'Sábado',chips:['Quality run AM','Upper B PM']},
+  0:{name:'Domingo',chips:['Long run familiar','Meal prep']}
+};
+const SCHEDULE={
+  1:[{t:'6:30',a:'Despertar. Levotiroxina + 400 ml agua.'},{t:'7:30',a:'Café de olla #1 sin azúcar + creatina + colágeno (60 min después de la levotiroxina).'},{t:'7:45',a:'Desayuno · {desayuno} + omega-3. Agua 250–300 ml.',meal:'desayuno'},{t:'9:00',a:'Oficina.'},{t:'10:30',a:'Café #2 + 350 ml agua.'},{t:'13:30',a:'Comida · {comida}. Agua 350 ml.',meal:'comida'},{t:'14:00',a:'Café #3 — último del día.'},{t:'18:30',a:'Hidratación previa: 300–400 ml antes del squash.'},{t:'19:00',a:'Squash. Agua extra según sudor y calor.'},{t:'20:15',a:'Cena · {cena} + ~300 ml agua.',meal:'cena'},{t:'21:15',a:'Closing Ritual (15 min): higiene dental, skincare, ropa/mochila/botella de mañana, reflexión del día, luces bajas.'},{t:'21:45',a:'Cierre temprano — a dormir.'}],
+  2:[{t:'5:45',a:'Despertar. Levotiroxina + 400 ml agua.'},{t:'6:45',a:'Café #1 + creatina + colágeno.'},{t:'7:00',a:'Gym · Lower completo. Agua 500–750 ml durante la sesión.'},{t:'8:15',a:'Desayuno · {desayuno} + omega-3. Agua 250–300 ml.',meal:'desayuno'},{t:'9:00',a:'Oficina.'},{t:'10:30',a:'Café #2 + 350 ml agua.'},{t:'13:30',a:'Comida · {comida}. Agua 350 ml.',meal:'comida'},{t:'14:00',a:'Café #3 — último del día.'},{t:'16:45',a:'Agua 300 ml.'},{t:'19:00',a:'Entorno hasta las 22:00.'},{t:'22:15',a:'Cena · {cena} + ~300 ml agua.',meal:'cena'},{t:'22:45',a:'Closing Ritual — versión rápida (5 min). Día largo: prioriza dormir.'}],
+  3:[{t:'6:00',a:'Despertar. Levotiroxina + 400 ml agua.'},{t:'6:10',a:'5K easy — aeróbico, conversacional, recuperación activa.'},{t:'6:45',a:'Ducha rápida.'},{t:'7:00',a:'Café #1 + creatina + colágeno.'},{t:'7:15',a:'Desayuno · {desayuno} + omega-3.',meal:'desayuno'},{t:'9:00',a:'Oficina.'},{t:'10:30',a:'Café #2 + 350 ml agua.'},{t:'13:30',a:'Comida · {comida}. Agua 350 ml.',meal:'comida'},{t:'14:00',a:'Café #3 — último del día.'},{t:'19:00',a:'Seminario hasta las 22:00.'},{t:'22:00',a:'Fin de Seminario → arranca el RESET.'},{t:'22:10',a:'Hidratación previa: 400–500 ml.'},{t:'22:20',a:'Vapor 10–15 min.'},{t:'22:35',a:'Ducha completa.'},{t:'22:50',a:'Higiene dental extendida: hilo/interdental, cepillado, lengua.'},{t:'23:00',a:'Skincare e hidratación corporal.'},{t:'23:10',a:'Grooming + antitranspirante (rotación semanal).'},{t:'23:20',a:'Toalla limpia + funda de almohada limpia.'},{t:'23:30',a:'Cena · {cena} + ~300 ml agua, con la hidratación gradual de después del vapor.',meal:'cena'},{t:'23:50',a:'Desconexión y cama — la noche más tardía de la semana.'}],
+  4:[{t:'5:45',a:'Despertar. Levotiroxina + 400 ml agua.'},{t:'6:45',a:'Café #1 + creatina + colágeno.'},{t:'7:00',a:'Gym · Upper A. Agua 500–750 ml durante la sesión.'},{t:'8:15',a:'Desayuno · {desayuno} + omega-3.',meal:'desayuno'},{t:'9:00',a:'Oficina.'},{t:'10:30',a:'Café #2 + 350 ml agua.'},{t:'13:30',a:'Comida · {comida}. Agua 350 ml.',meal:'comida'},{t:'14:00',a:'Café #3 — último del día.'},{t:'16:45',a:'Agua 300 ml.'},{t:'18:00',a:'Sale de oficina — noche libre.'},{t:'20:00',a:'Cena · {cena} + ~300 ml agua.',meal:'cena'},{t:'21:15',a:'Closing Ritual (15 min).'},{t:'21:30',a:'A dormir — mañana sábado es doble sesión.'}],
+  5:[{t:'6:30',a:'Despertar. Levotiroxina + 400 ml agua.'},{t:'7:30',a:'Café #1 + creatina + colágeno.'},{t:'7:45',a:'Desayuno · {desayuno} + omega-3.',meal:'desayuno'},{t:'9:00',a:'Oficina.'},{t:'10:30',a:'Café #2 + 350 ml agua.'},{t:'13:30',a:'Comida · {comida}. Agua 350 ml.',meal:'comida'},{t:'14:00',a:'Café #3 — último del día.'},{t:'19:00',a:'Métodos hasta las 22:00.'},{t:'22:15',a:'Cena · {cena} + ~300 ml agua.',meal:'cena'},{t:'22:45',a:'Closing Ritual.'}],
+  6:[{t:'6:30',a:'Despertar. Levotiroxina + 400 ml agua.'},{t:'7:00',a:'Quality run — velocidad / economía de carrera.'},{t:'7:50',a:'Café #1 + creatina + colágeno.'},{t:'8:10',a:'Desayuno · {desayuno} + omega-3.',meal:'desayuno'},{t:'9:00–13:00',a:'Libre — separa varias horas antes de Upper B para llegar sin fatiga.'},{t:'13:30',a:'Comida · {comida}. Agua 350 ml.',meal:'comida'},{t:'16:00',a:'Gym · Upper B. Si hay fatiga importante, prioriza la calidad de la sesión de running de la mañana.'},{t:'17:15',a:'Agua 300 ml — recuperación de la doble sesión.'},{t:'20:00',a:'Cena · {cena} + ~300 ml agua.',meal:'cena'},{t:'21:15',a:'Closing Ritual.'}],
+  0:[{t:'6:30',a:'Despertar. Levotiroxina + 400 ml agua.'},{t:'7:00',a:'Café #1 + creatina + colágeno, antes de salir.'},{t:'7:15',a:'Long run familiar — según la progresión de la semana. Agua extra por sed/calor.'},{t:'9:15',a:'Ducha rápida al terminar.'},{t:'9:30',a:'Desayuno · {desayuno} + omega-3 — dentro de la primera hora después de correr.',meal:'desayuno'},{t:'13:30',a:'Comida familiar · {comida}. Agua 350 ml.',meal:'comida'},{t:'16:00',a:'Meal prep: cocinar y porcionar proteína y carbohidrato de toda la semana.'},{t:'19:00',a:'Cena · {cena} + ~300 ml agua.',meal:'cena'},{t:'21:00',a:'Closing Ritual + preparar ropa/mochila/botella del lunes.'}]
+};
+let schedSelectedDow=null;
+function renderSchedule(dow){const jsToday=new Date().getDay();if(dow===undefined||dow===null)dow=schedSelectedDow!==null?schedSelectedDow:jsToday;schedSelectedDow=dow;const order=[1,2,3,4,5,6,0],wm=db.settings.weeklyMenu||defaultWeeklyMenu(),dayMenu=wm.week[dow]||{},meta=SCHED_META[dow];
+  schedDayPicker.innerHTML=order.map(d=>`<div class="day-plan ${d===dow?'today':''}" onclick="renderSchedule(${d})"><b>${SCHED_META[d].name.slice(0,3)}</b><span>${d===jsToday?'Hoy':''}</span></div>`).join('');
+  schedDayTitle.textContent=meta.name+(dow===jsToday?' · hoy':'');
+  schedChips.innerHTML=meta.chips.map(c=>`<span class="pill">${esc(c)}</span>`).join('')+`<span class="pill">${GOAL.toLocaleString('es-MX')} kcal</span>`;
+  schedRows.innerHTML=SCHEDULE[dow].map(row=>{const text=row.meal?row.a.replace('{'+row.meal+'}',esc(dayMenu[row.meal]||'— sin fijar —')):esc(row.a);return`<div class="meal" style="padding:9px 0;display:flex;gap:12px;"><div style="flex-shrink:0;width:66px;font-weight:800;color:var(--green);font-variant-numeric:tabular-nums;font-size:12.5px;">${row.t}</div><div style="font-size:12.5px;line-height:1.45;">${text}</div></div>`}).join('')}
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{if(activeDayDate&&b.dataset.page!=='today'){clearTimeout(autosaveTimer);saveToday(false);activeDayDate=null}document.querySelectorAll('.tab,.page').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById(b.dataset.page).classList.add('active');if(b.dataset.page==='progressPage')renderProgress();if(b.dataset.page==='trainingPage'){renderTrainingWeek();renderWorkout();renderWorkoutHistory()}if(b.dataset.page==='routinesPage')renderRoutineLibrary();if(b.dataset.page==='today')renderWeek();if(b.dataset.page==='recipesPage'){renderRecipes();renderDishTable();fillWeeklyMenuSelects()}if(b.dataset.page==='schedulePage')renderSchedule()});
 const catOptions=Object.entries(CATS).map(([v,n])=>`<option value="${v}">${n}</option>`).join('');mealCategory.innerHTML=catOptions;fillRecipeSelect();
 const now=new Date(),hour=now.getHours();hello.textContent=(hour<12?'Buenos días':hour<19?'Buenas tardes':'Buenas noches')+', Ángel';todayLabel.textContent=dayLabel(localDate());measureDate.value=localDate();workoutDate.value=localDate();workoutDate.addEventListener('change',()=>{renderWorkout()});['steps','water','sleep','mobility','energyOut','adherence','notes','workoutDone'].forEach(id=>{const el=document.getElementById(id);el.addEventListener(el.type==='checkbox'||el.tagName==='SELECT'?'change':'input',queueAutosave)});fillToday();renderWeek();renderProgress();renderTrainingWeek();renderWorkout();renderWorkoutHistory();renderRoutineLibrary();renderRecipes();renderDishTable();if('serviceWorker'in navigator)navigator.serviceWorker.register('service-worker.js');
 </script>
